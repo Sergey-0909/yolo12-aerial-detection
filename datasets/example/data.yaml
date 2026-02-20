@@ -1,0 +1,12 @@
+# Dataset Configuration
+# Update path and class names for your dataset
+
+path: .
+train: train/images
+val: val/images
+
+nc: 1
+names: ['object']    # Update with your class names
+
+# Uncomment for OBB datasets:
+# task: obb

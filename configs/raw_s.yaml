@@ -1,0 +1,132 @@
+# =============================================================================
+# YOLO12 Small - Raw Training (From Scratch)
+# =============================================================================
+# Training Mode: RAW (random initialization, no pretrained weights)
+# Model: YOLO12s (Small - ~9.3M params)
+# Best for: Thermal/grayscale imagery, custom domains
+#
+# NOTE: Batch sizes are reference values for a 32GB GPU at 640px.
+# Adjust based on your GPU VRAM. Formula for different image sizes:
+#   batch_new = batch_640 / (new_size / 640)^2
+# =============================================================================
+
+# === CORE ===
+training_mode: raw
+model: ../architectures/yolo12s.yaml
+nc: 1
+epochs: 800
+
+# === BATCH SIZE ===
+batch_size: 64
+val_batch_size: 96
+
+# === DATASET ===
+data:
+  path: ../datasets/example/data.yaml
+  image_size: 640
+  cache: ram
+  workers: 8
+  pin_memory: true
+
+# === OPTIMIZER (conservative for raw training) ===
+optimizer:
+  type: AdamW
+learning_rate: 0.001
+lrf: 0.01
+momentum: 0.937
+weight_decay: 0.001
+
+# === WARMUP (extended for raw training) ===
+warmup_epochs: 5.0
+warmup_momentum: 0.8
+warmup_bias_lr: 0.01
+
+# === SCHEDULER ===
+scheduler: cosine
+
+# === LOSS ===
+loss:
+  box_loss_gain: 7.5
+  cls_loss_gain: 0.5
+  dfl_loss_gain: 1.5
+
+# === AUGMENTATION (RGB - full color) ===
+augmentation:
+  degrees: 0.0
+  translate: 0.25
+  scale: 0.6
+  shear: 0.0
+  perspective: 0.0
+  flipud: 0.0
+  fliplr: 0.5
+  hsv_h: 0.02
+  hsv_s: 0.8
+  hsv_v: 0.6
+  mosaic: 1.0
+  mixup: 0.2
+  copy_paste: 0.15
+  erasing: 0.5
+  close_mosaic: 30
+
+# === HARDWARE ===
+hardware:
+  device: '0'
+  deterministic: false
+  benchmark: true
+
+# === OPTIMIZATION ===
+optimization:
+  amp:
+    enabled: true
+  ema:
+    enabled: true
+    decay: 0.9999
+  compile:
+    enabled: false
+
+# === VALIDATION ===
+validation:
+  enabled: true
+  interval: 1
+  conf_threshold: 0.001
+  iou_threshold: 0.6
+  max_detections: 300
+
+# === CHECKPOINTS ===
+monitoring:
+  checkpoint_strategy: best_map
+  save_best_only: false
+  save_last: true
+
+logging:
+  level: INFO
+  verbose: true
+  tensorboard: true
+  plots: true
+  save_period: 100
+
+# === EARLY STOPPING ===
+patience: 150
+
+# === PRODUCTION ===
+production:
+  seed: 42
+  exist_ok: true
+  resume: false
+  pretrained: false
+
+# === EXPORT ===
+export:
+  formats: [onnx, engine, ncnn]
+  onnx:
+    opset: 17
+    simplify: true
+    dynamic: false
+    half: false
+  tensorrt:
+    workspace: 8
+    fp16: true
+    int8: false
+    batch: 1
+  ncnn:
+    half: true

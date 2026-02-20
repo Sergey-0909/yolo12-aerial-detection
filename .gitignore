@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Virtual environments
+venv/
+.venv/
+
+# PyTorch weights & exports
+*.pt
+*.pth
+*.onnx
+*.engine
+*.tflite
+*_ncnn_model/
+
+# Training results
+training/results/*/
+
+# Dataset cache
+*.cache
+*.npy
+
+# Dataset images/labels (too large for git)
+datasets/*/train/images/*
+datasets/*/val/images/*
+datasets/*/train/labels/*
+datasets/*/val/labels/*
+!datasets/**/.gitkeep
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+
+# Logs
+*.log
+runs/

@@ -1,0 +1,135 @@
+# =============================================================================
+# YOLO12 Small OBB - Raw Training (From Scratch)
+# =============================================================================
+# Training Mode: RAW (from scratch, no pretrained weights)
+# Task: OBB (Oriented Bounding Boxes)
+# Model: YOLO12s (Small - ~9.3M params)
+# Architecture: yolo12s_obb.yaml (OBB head)
+#
+# Dataset requirements:
+#   - data.yaml must contain:  task: obb
+#   - Label format per line:   class_id x1 y1 x2 y2 x3 y3 x4 y4
+#   - All coordinates normalized [0, 1]
+#
+# NOTE: Batch sizes are reference values for a 32GB GPU at 640px.
+# Adjust based on your GPU VRAM. Formula for different image sizes:
+#   batch_new = batch_640 / (new_size / 640)^2
+# =============================================================================
+
+# === CORE ===
+training_mode: raw
+model: ../architectures/yolo12s_obb.yaml
+nc: 1
+epochs: 800
+
+# === BATCH SIZE ===
+batch_size: 64
+val_batch_size: 64
+
+# === DATASET (update path to your OBB dataset) ===
+data:
+  path: ../datasets/example/data.yaml
+  image_size: 640
+  cache: ram
+  workers: 8
+  pin_memory: true
+
+# === OPTIMIZER ===
+optimizer:
+  type: AdamW
+learning_rate: 0.001
+lrf: 0.01
+momentum: 0.937
+weight_decay: 0.0005
+
+# === WARMUP ===
+warmup_epochs: 5.0
+warmup_momentum: 0.8
+warmup_bias_lr: 0.01
+
+# === SCHEDULER ===
+scheduler: cosine
+
+# === LOSS ===
+loss:
+  box_loss_gain: 7.5
+  cls_loss_gain: 0.5
+  dfl_loss_gain: 1.5
+
+# === AUGMENTATION ===
+# NOTE: degrees augmentation is beneficial for OBB training
+augmentation:
+  hsv_h: 0.0
+  hsv_s: 0.0
+  hsv_v: 0.2
+  degrees: 15.0
+  translate: 0.1
+  scale: 0.5
+  shear: 2.0
+  perspective: 0.0001
+  flipud: 0.0
+  fliplr: 0.5
+  mosaic: 1.0
+  mixup: 0.0
+  copy_paste: 0.0
+  erasing: 0.4
+  close_mosaic: 50
+
+# === HARDWARE ===
+hardware:
+  device: '0'
+  deterministic: false
+  benchmark: true
+
+# === OPTIMIZATION ===
+optimization:
+  amp:
+    enabled: true
+  ema:
+    enabled: true
+    decay: 0.9999
+  compile:
+    enabled: false
+
+# === VALIDATION ===
+validation:
+  enabled: true
+  interval: 1
+  conf_threshold: 0.001
+  iou_threshold: 0.6
+  max_detections: 300
+
+# === CHECKPOINTS ===
+monitoring:
+  checkpoint_strategy: best_map
+  save_best_only: false
+  save_last: true
+
+logging:
+  level: INFO
+  verbose: true
+  tensorboard: true
+  plots: true
+  save_period: 100
+
+# === EARLY STOPPING ===
+patience: 150
+
+# === PRODUCTION ===
+production:
+  seed: 42
+  exist_ok: true
+  resume: false
+  pretrained: false
+
+# === EXPORT ===
+export:
+  formats: [onnx, engine]
+  onnx:
+    opset: 17
+    simplify: true
+    dynamic: false
+  tensorrt:
+    workspace: 8
+    fp16: true
+    int8: false
